@@ -1,6 +1,12 @@
 package com.cambiosmart.demo.spring.boot.tasas;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "Tasas")
 public class Tasas {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String moneda;
     private Double compra;
