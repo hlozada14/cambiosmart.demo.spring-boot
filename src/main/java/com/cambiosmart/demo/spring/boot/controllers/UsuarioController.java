@@ -23,8 +23,9 @@ public class UsuarioController {
 
         return ResponseEntity.ok(new PerfilResponse(
                 usuario.getId(),
-                usuario.getUsername(),
+                usuario.getNombreCompleto(),
                 usuario.getEmail(),
+                usuario.getTelefono(),
                 usuario.getRole().name()
         ));
     }
@@ -40,5 +41,5 @@ public class UsuarioController {
         return ResponseEntity.ok("Ruta protegida - accesible por cualquier usuario autenticado");
     }
 
-    public record PerfilResponse(Long id, String username, String email, String role) {}
+    public record PerfilResponse(Long id, String nombreCompleto, String email, String telefono, String role) {}
 }

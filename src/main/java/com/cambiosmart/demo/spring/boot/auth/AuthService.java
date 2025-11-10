@@ -19,32 +19,33 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    private static final long REMEMBER_ME_EXPIRATION = 7L * 24 * 60 * 60 * 1000; // 7 días
+
     @Transactional
     public AuthDTO.AuthResponse register(AuthDTO.RegisterRequest request) {
-
-        if (usuarioService.existsByUsername(request.getUsername())) {
-            throw new AuthException.UserAlreadyExistsException("El nombre de usuario ya existe");
-        }
-
         if (usuarioService.existsByEmail(request.getEmail())) {
             throw new AuthException.UserAlreadyExistsException("El email ya está registrado");
         }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new AuthException("Las contraseñas no coinciden");
+        }
 
         var usuario = new Usuario();
-        usuario.setUsername(request.getUsername());
+        usuario.setNombreCompleto(request.getNombreCompleto());
         usuario.setEmail(request.getEmail());
+        usuario.setTelefono(request.getTelefono());
         usuario.setPassword(request.getPassword());
         usuario.setRole(Role.USER);
 
         usuario = usuarioService.save(usuario);
 
-        var jwtToken = jwtService.generateToken(usuario);
+        var jwtToken = jwtService.generateToken(usuario); // expiración por defecto
 
         return new AuthDTO.AuthResponse(
                 jwtToken,
                 "Bearer",
                 usuario.getId(),
-                usuario.getUsername(),
+                usuario.getNombreCompleto(),
                 usuario.getEmail(),
                 usuario.getRole().name()
         );
@@ -54,19 +55,23 @@ public class AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
+                            request.getEmail(),           // principal = email
                             request.getPassword()
                     )
             );
 
             var usuario = (Usuario) authentication.getPrincipal();
-            var jwtToken = jwtService.generateToken(usuario);
+
+            // Si "recordarme" es true, emitimos un token más largo
+            String jwtToken = (request.getRememberMe() != null && request.getRememberMe())
+                    ? jwtService.generateToken(usuario, REMEMBER_ME_EXPIRATION)
+                    : jwtService.generateToken(usuario);
 
             return new AuthDTO.AuthResponse(
                     jwtToken,
                     "Bearer",
                     usuario.getId(),
-                    usuario.getUsername(),
+                    usuario.getNombreCompleto(),
                     usuario.getEmail(),
                     usuario.getRole().name()
             );

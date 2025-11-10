@@ -48,11 +48,12 @@ public class SecurityConfig {
                         // Rutas públicas
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/saludo/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         // Rutas específicas con roles
                         .requestMatchers("/api/usuarios/admin").hasRole("ADMIN")
                         // Rutas protegidas genéricas
-                        .requestMatchers("/api/productos/**").authenticated()
+                        .requestMatchers("/api/tasas/**").authenticated()
                         .requestMatchers("/api/clientes/**").authenticated()
                         .requestMatchers("/api/usuarios/**").authenticated()
                         // Cualquier otra ruta requiere autenticación

@@ -90,4 +90,7 @@ public class Tasas {
     public void setTipo(String tipo) {
         this.tipo = tipo;
     }
+
+    // dentro de Tasas.java
+    public Tasas() {}  // <--- constructor sin args requerido por JPA
 }

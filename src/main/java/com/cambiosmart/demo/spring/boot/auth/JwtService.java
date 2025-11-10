@@ -82,4 +82,22 @@ public class JwtService {
             return null;
         }
     }
+    // ...deja los imports y la clase como está...
+    // Añade este metodo dentro de JwtService:
+    public String generateToken(UserDetails userDetails, long customExpirationMillis) {
+        var extraClaims = Map.of(
+                "role", userDetails.getAuthorities().stream()
+                        .findFirst()
+                        .map(Object::toString)
+                        .orElse("ROLE_USER")
+        );
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .claims(extraClaims)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(customExpirationMillis)))
+                .signWith(getKey())
+                .compact();
+    }
 }
