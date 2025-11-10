@@ -70,4 +70,7 @@ public class Usuario implements UserDetails {
     public String getUsername() {
         return username;
     }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
