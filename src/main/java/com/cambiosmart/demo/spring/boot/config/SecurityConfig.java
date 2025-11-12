@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         // Rutas específicas con roles
                         .requestMatchers("/api/usuarios/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Rutas protegidas genéricas
                         .requestMatchers("/api/tasas/**").authenticated()
                         .requestMatchers("/api/clientes/**").authenticated()

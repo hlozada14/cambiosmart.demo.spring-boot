@@ -20,26 +20,32 @@ public class CotizadorPublicController {
     private final CotizadorService cotizadorService;
     private final TasaRepository tasaRepository;
 
-    // 1) Tasas vigentes (para pintar el header del cotizador)
+    // Tasas vigentes para pintar el cotizador
     @GetMapping("/tasas/vigentes")
     public ResponseEntity<?> tasasVigentes() {
-        Tasas cs = tasaRepository.findFirstByFuenteAndMonedaOrderByIdDesc("CAMBIOSMART", "USD")
+        Tasas cs = tasaRepository
+                .findFirstByFuenteIgnoreCaseAndMonedaIgnoreCaseOrderByIdDesc("CAMBIOSMART", "USD")
                 .orElse(null);
-        Tasas mdo = tasaRepository.findFirstByFuenteAndMonedaOrderByIdDesc("MERCADO", "USD")
+        Tasas mdo = tasaRepository
+                .findFirstByFuenteIgnoreCaseAndMonedaIgnoreCaseOrderByIdDesc("MERCADO", "USD")
                 .orElse(null);
+
         if (cs == null || mdo == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Faltan tasas vigentes CAMBIOSMART o MERCADO"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Faltan tasas vigentes CAMBIOSMART o MERCADO"));
         }
+
         return ResponseEntity.ok(Map.of(
                 "cambiosmart", Map.of("compra", cs.getCompra(), "venta", cs.getVenta()),
                 "mercado",     Map.of("compra", mdo.getCompra(), "venta", mdo.getVenta())
         ));
     }
 
-    // 2) Cotizar (calcular monto de salida y ahorro)
+    // Cálculo del cotizador (público)
     @PostMapping("/cotizar")
     public CotizarResponse cotizar(@RequestBody @Valid CotizarRequest request) {
         return cotizadorService.cotizar(request);
     }
 }
+
 
