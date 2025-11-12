@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 })
 public class Operacion {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 120)
@@ -56,23 +57,29 @@ public class Operacion {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private Banco bancoEmpresa;
+
     @Column(length = 64)
     private String cuentaEmpresa;
+
     @Column(length = 32)
     private String cciEmpresa;
+
     @Column(length = 120)
     private String titularEmpresa;
 
     // Confirmación de transferencia
     @Column(length = 64)
     private String referenciaTransferencia;
+
     @Column(length = 512)
     private String notaCliente;
+
     @Column(length = 256)
     private String comprobantePath;
 
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
+
     @Column(name = "actualizado_en", nullable = false)
     private LocalDateTime actualizadoEn;
 
@@ -86,7 +93,67 @@ public class Operacion {
     @PreUpdate
     void preUpdate() { actualizadoEn = LocalDateTime.now(); }
 
-    // Getters/Setters (omitir por brevedad si usas Lombok)
-    // ...
-    // (Genera todo con tu IDE o usa Lombok para evitar boilerplate)
+    // ===== Getters & Setters =====
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getOwner() { return owner; }
+    public void setOwner(String owner) { this.owner = owner; }
+
+    public TipoOperacion getTipo() { return tipo; }
+    public void setTipo(TipoOperacion tipo) { this.tipo = tipo; }
+
+    public Moneda getMonedaOrigen() { return monedaOrigen; }
+    public void setMonedaOrigen(Moneda monedaOrigen) { this.monedaOrigen = monedaOrigen; }
+
+    public Moneda getMonedaDestino() { return monedaDestino; }
+    public void setMonedaDestino(Moneda monedaDestino) { this.monedaDestino = monedaDestino; }
+
+    public BigDecimal getMontoOrigen() { return montoOrigen; }
+    public void setMontoOrigen(BigDecimal montoOrigen) { this.montoOrigen = montoOrigen; }
+
+    public BigDecimal getTasaAplicada() { return tasaAplicada; }
+    public void setTasaAplicada(BigDecimal tasaAplicada) { this.tasaAplicada = tasaAplicada; }
+
+    public BigDecimal getMontoDestino() { return montoDestino; }
+    public void setMontoDestino(BigDecimal montoDestino) { this.montoDestino = montoDestino; }
+
+    public EstadoOperacion getEstado() { return estado; }
+    public void setEstado(EstadoOperacion estado) { this.estado = estado; }
+
+    public LocalDateTime getExpiraEn() { return expiraEn; }
+    public void setExpiraEn(LocalDateTime expiraEn) { this.expiraEn = expiraEn; }
+
+    public Long getCuentaOrigenId() { return cuentaOrigenId; }
+    public void setCuentaOrigenId(Long cuentaOrigenId) { this.cuentaOrigenId = cuentaOrigenId; }
+
+    public Long getCuentaDestinoId() { return cuentaDestinoId; }
+    public void setCuentaDestinoId(Long cuentaDestinoId) { this.cuentaDestinoId = cuentaDestinoId; }
+
+    public Banco getBancoEmpresa() { return bancoEmpresa; }
+    public void setBancoEmpresa(Banco bancoEmpresa) { this.bancoEmpresa = bancoEmpresa; }
+
+    public String getCuentaEmpresa() { return cuentaEmpresa; }
+    public void setCuentaEmpresa(String cuentaEmpresa) { this.cuentaEmpresa = cuentaEmpresa; }
+
+    public String getCciEmpresa() { return cciEmpresa; }
+    public void setCciEmpresa(String cciEmpresa) { this.cciEmpresa = cciEmpresa; }
+
+    public String getTitularEmpresa() { return titularEmpresa; }
+    public void setTitularEmpresa(String titularEmpresa) { this.titularEmpresa = titularEmpresa; }
+
+    public String getReferenciaTransferencia() { return referenciaTransferencia; }
+    public void setReferenciaTransferencia(String referenciaTransferencia) { this.referenciaTransferencia = referenciaTransferencia; }
+
+    public String getNotaCliente() { return notaCliente; }
+    public void setNotaCliente(String notaCliente) { this.notaCliente = notaCliente; }
+
+    public String getComprobantePath() { return comprobantePath; }
+    public void setComprobantePath(String comprobantePath) { this.comprobantePath = comprobantePath; }
+
+    public LocalDateTime getCreadoEn() { return creadoEn; }
+    public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
+
+    public LocalDateTime getActualizadoEn() { return actualizadoEn; }
+    public void setActualizadoEn(LocalDateTime actualizadoEn) { this.actualizadoEn = actualizadoEn; }
 }

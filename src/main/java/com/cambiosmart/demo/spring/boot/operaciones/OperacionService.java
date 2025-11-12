@@ -19,7 +19,6 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,26 +48,27 @@ public class OperacionService {
         return BigDecimal.valueOf(t.getCompra());
     }
 
+    /** Mapea entidad -> DTO usando setters (acorde al OperacionResponse actual). */
     private OperacionResponse toResponse(Operacion o) {
         OperacionResponse r = new OperacionResponse();
-        r.id = o.getId();
-        r.owner = o.getOwner();
-        r.tipo = o.getTipo();
-        r.monedaOrigen = o.getMonedaOrigen();
-        r.monedaDestino = o.getMonedaDestino();
-        r.montoOrigen = o.getMontoOrigen();
-        r.tasaAplicada = o.getTasaAplicada();
-        r.montoDestino = o.getMontoDestino();
-        r.estado = o.getEstado();
-        r.expiraEn = o.getExpiraEn();
-        r.cuentaOrigenId = o.getCuentaOrigenId();
-        r.cuentaDestinoId = o.getCuentaDestinoId();
-        r.bancoEmpresa = o.getBancoEmpresa();
-        r.cuentaEmpresa = o.getCuentaEmpresa();
-        r.cciEmpresa = o.getCciEmpresa();
-        r.titularEmpresa = o.getTitularEmpresa();
-        r.referenciaTransferencia = o.getReferenciaTransferencia();
-        r.comprobantePath = o.getComprobantePath();
+        r.setId(o.getId());
+        r.setOwner(o.getOwner());
+        r.setTipo(o.getTipo());
+        r.setMonedaOrigen(o.getMonedaOrigen());
+        r.setMonedaDestino(o.getMonedaDestino());
+        r.setMontoOrigen(o.getMontoOrigen());
+        r.setTasaAplicada(o.getTasaAplicada());
+        r.setMontoDestino(o.getMontoDestino());
+        r.setEstado(o.getEstado());
+        r.setExpiraEn(o.getExpiraEn());
+        r.setCuentaOrigenId(o.getCuentaOrigenId());
+        r.setCuentaDestinoId(o.getCuentaDestinoId());
+        r.setBancoEmpresa(o.getBancoEmpresa());
+        r.setCuentaEmpresa(o.getCuentaEmpresa());
+        r.setCciEmpresa(o.getCciEmpresa());
+        r.setTitularEmpresa(o.getTitularEmpresa());
+        r.setReferenciaTransferencia(o.getReferenciaTransferencia());
+        r.setComprobantePath(o.getComprobantePath());
         return r;
     }
 
@@ -76,11 +76,15 @@ public class OperacionService {
     public OperacionResponse cotizar(CotizarOperacionRequest req) {
         String owner = currentUser();
 
+        if (req.getMonto() == null || req.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero");
+        }
+
         // Monedas según el tipo
         Moneda mOrigen = (req.getTipo() == TipoOperacion.COMPRA_USD) ? Moneda.PEN : Moneda.USD;
         Moneda mDestino = (req.getTipo() == TipoOperacion.COMPRA_USD) ? Moneda.USD : Moneda.PEN;
 
-        // Tasa: si cliente compra USD → usamos VENTA; si vende USD → usamos COMPRA
+        // Tasa: si cliente compra USD → VENTA; si vende USD → COMPRA
         BigDecimal tasa = (req.getTipo() == TipoOperacion.COMPRA_USD) ? ultimaVentaUsd() : ultimaCompraUsd();
 
         BigDecimal montoOrigen = req.getMonto().setScale(2, RoundingMode.HALF_UP);
@@ -111,19 +115,18 @@ public class OperacionService {
     @Transactional
     public OperacionResponse seleccionarCuentas(Long id, SeleccionarCuentasRequest req) {
         String owner = currentUser();
+
         Operacion op = repo.findByIdAndOwner(id, owner)
                 .orElseThrow(() -> new EntityNotFoundException("Operación no encontrada"));
 
         if (op.getEstado() != EstadoOperacion.COTIZADA)
             throw new IllegalStateException("La operación no está en estado COTIZADA");
 
-        CuentaBancaria origen = cuentaRepo.findById(req.getCuentaOrigenId())
-                .orElseThrow(() -> new EntityNotFoundException("Cuenta origen no existe"));
-        CuentaBancaria destino = cuentaRepo.findById(req.getCuentaDestinoId())
-                .orElseThrow(() -> new EntityNotFoundException("Cuenta destino no existe"));
-
-        if (!owner.equals(origen.getOwner()) || !owner.equals(destino.getOwner()))
-            throw new IllegalStateException("Las cuentas no pertenecen al usuario");
+        // Busca cuentas del usuario y activas
+        CuentaBancaria origen = cuentaRepo.findByIdAndOwnerAndActivoTrue(req.getCuentaOrigenId(), owner)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta origen no existe o no pertenece al usuario"));
+        CuentaBancaria destino = cuentaRepo.findByIdAndOwnerAndActivoTrue(req.getCuentaDestinoId(), owner)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta destino no existe o no pertenece al usuario"));
 
         if (origen.getMoneda() != op.getMonedaOrigen() || destino.getMoneda() != op.getMonedaDestino())
             throw new IllegalStateException("Las monedas de las cuentas no coinciden con la operación");
@@ -131,17 +134,16 @@ public class OperacionService {
         op.setCuentaOrigenId(origen.getId());
         op.setCuentaDestinoId(destino.getId());
 
-        // Ofrecer/seleccionar por defecto una cuenta empresa de la moneda que el cliente ENVÍA
-        Moneda monedaClienteEnvía = op.getMonedaOrigen();
-        CuentaEmpresaCatalogo empresa = null;
+        // Seleccionar cuenta empresa (según moneda que envía el cliente)
+        Moneda monedaClienteEnvia = op.getMonedaOrigen();
         for (CuentaEmpresaCatalogo c : CuentaEmpresaCatalogo.values()) {
-            if (c.moneda == monedaClienteEnvía) { empresa = c; break; }
-        }
-        if (empresa != null) {
-            op.setBancoEmpresa(empresa.banco);
-            op.setCuentaEmpresa(empresa.numeroCuenta);
-            op.setCciEmpresa(empresa.cci);
-            op.setTitularEmpresa(empresa.titular);
+            if (c.moneda == monedaClienteEnvia) {
+                op.setBancoEmpresa(c.banco);
+                op.setCuentaEmpresa(c.numeroCuenta);
+                op.setCciEmpresa(c.cci);
+                op.setTitularEmpresa(c.titular);
+                break;
+            }
         }
 
         op.setEstado(EstadoOperacion.CUENTAS_SELECCIONADAS);
@@ -165,7 +167,6 @@ public class OperacionService {
         if (op.getEstado() != EstadoOperacion.CUENTAS_SELECCIONADAS)
             throw new IllegalStateException("La operación no está lista para adjuntar comprobante");
 
-        // Guardado simple en carpeta local 'uploads'
         Files.createDirectories(Path.of("uploads"));
         String filename = "op_" + id + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path path = Path.of("uploads", filename);
