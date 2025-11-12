@@ -48,7 +48,7 @@ public class CuentaService {
     }
 
     @Transactional
-    public CuentaResponse crear(CrearCuentaRequest r) {
+        public CuentaResponse crear(CrearCuentaRequest r) {
         String owner = currentUser();
 
         String ctaDigits = onlyDigits(r.getNumeroCuenta());
@@ -67,18 +67,20 @@ public class CuentaService {
         c.setAlias(r.getAlias());
         c.setBanco(r.getBanco());
         c.setMoneda(r.getMoneda());
+        c.setTipoCuenta(r.getTipoCuenta());   // ⬅️ importante
         c.setNumeroCuenta(ctaDigits);
         c.setCci(cciDigits);
 
-        // si es la primera de la moneda, la marcamos principal
-        boolean hayAlguna = !repo.findByOwnerAndMonedaAndActivoTrueOrderByPrincipalDescIdAsc(owner, r.getMoneda()).isEmpty();
+        boolean hayAlguna = !repo
+                .findByOwnerAndMonedaAndActivoTrueOrderByPrincipalDescIdAsc(owner, r.getMoneda())
+                .isEmpty();
         c.setPrincipal(hayAlguna ? r.isPrincipal() : true);
 
         c = repo.save(c);
 
-        // si quedó principal, desmarcar otras
         if (c.isPrincipal()) {
-            List<CuentaBancaria> otras = repo.findByOwnerAndMonedaAndActivoTrueOrderByPrincipalDescIdAsc(owner, r.getMoneda());
+            List<CuentaBancaria> otras = repo
+                    .findByOwnerAndMonedaAndActivoTrueOrderByPrincipalDescIdAsc(owner, r.getMoneda());
             for (CuentaBancaria o : otras) {
                 if (!Objects.equals(o.getId(), c.getId()) && o.isPrincipal()) {
                     o.setPrincipal(false);
@@ -89,6 +91,7 @@ public class CuentaService {
 
         return toResponse(c);
     }
+
 
     @Transactional
     public CuentaResponse actualizar(Long id, ActualizarCuentaRequest r) {
@@ -170,6 +173,7 @@ public class CuentaService {
         r.setAlias(c.getAlias());
         r.setBanco(c.getBanco());
         r.setMoneda(c.getMoneda());
+        r.setTipoCuenta(c.getTipoCuenta());   // ⬅️ NUEVO
         r.setNumeroCuenta(fmtCuenta(c.getNumeroCuenta()));
         r.setCci(fmtCci(c.getCci()));
         r.setPrincipal(c.isPrincipal());

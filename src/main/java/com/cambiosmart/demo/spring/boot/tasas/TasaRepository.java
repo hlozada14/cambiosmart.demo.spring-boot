@@ -13,6 +13,8 @@ public interface TasaRepository extends JpaRepository<Tasas, Long> {
 
     // Variante sin ignore-case si la necesitas
     Optional<Tasas> findFirstByFuenteAndMonedaOrderByIdDesc(String fuente, String moneda);
+
+    Optional<Tasas> findTopByFuenteAndMonedaOrderByFechaDesc(String fuente, String moneda);
 }
 
 

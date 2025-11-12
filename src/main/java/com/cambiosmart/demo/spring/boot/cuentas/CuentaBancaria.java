@@ -1,3 +1,4 @@
+// com.cambiosmart.demo.spring.boot.cuentas.CuentaBancaria
 package com.cambiosmart.demo.spring.boot.cuentas;
 
 import jakarta.persistence.*;
@@ -32,14 +33,19 @@ public class CuentaBancaria {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private Moneda moneda;
+    private Moneda moneda; // PEN, USD
 
-    // Guardar solo dígitos para asegurar unicidad/validación simple
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_cuenta", nullable = false, length = 20)
+    private TipoCuenta tipoCuenta; // AHORROS, CORRIENTE
+
+    // Guarda solo dígitos (normaliza en el servicio)
     @Column(name = "numero_cuenta", nullable = false, length = 40)
     private String numeroCuenta;
 
-    @Column(name = "cci", nullable = false, length = 20)
-    private String cci; // 20 dígitos
+    // 20 dígitos; para tolerar entradas con guiones si se escapara la normalización, dejamos 32
+    @Column(name = "cci", nullable = false, length = 32)
+    private String cci;
 
     @Column(nullable = false)
     private boolean principal = false;
@@ -75,6 +81,8 @@ public class CuentaBancaria {
     public void setBanco(Banco banco) { this.banco = banco; }
     public Moneda getMoneda() { return moneda; }
     public void setMoneda(Moneda moneda) { this.moneda = moneda; }
+    public TipoCuenta getTipoCuenta() { return tipoCuenta; }
+    public void setTipoCuenta(TipoCuenta tipoCuenta) { this.tipoCuenta = tipoCuenta; }
     public String getNumeroCuenta() { return numeroCuenta; }
     public void setNumeroCuenta(String numeroCuenta) { this.numeroCuenta = numeroCuenta; }
     public String getCci() { return cci; }

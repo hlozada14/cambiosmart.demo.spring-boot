@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/cuentas")
+@RequestMapping("/api/cuentas-bancarias")
 @RequiredArgsConstructor
 @Validated
 public class CuentaController {
@@ -24,7 +24,7 @@ public class CuentaController {
         return ResponseEntity.ok(service.listar(moneda));
     }
 
-    // POST /api/cuentas
+    // POST /api/cuentas-bancarias
     @PostMapping
     public ResponseEntity<CuentaResponse> crear(@Valid @RequestBody CrearCuentaRequest body) {
         return ResponseEntity.ok(service.crear(body));

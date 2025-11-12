@@ -35,7 +35,11 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService, UserDetailsService userDetailsService) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtService jwtService,
+            UserDetailsService userDetailsService) throws Exception {
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
@@ -45,23 +49,32 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas
+                        // Públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/saludo/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                        // Rutas específicas con roles
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // <-- importante para frontend
+
+                        // Roles
                         .requestMatchers("/api/usuarios/admin").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Rutas protegidas genéricas
+
+                        // Protegidos (explícito tu endpoint)
+                        .requestMatchers("/api/cuentas-bancarias/**").authenticated()
                         .requestMatchers("/api/tasas/**").authenticated()
                         .requestMatchers("/api/clientes/**").authenticated()
                         .requestMatchers("/api/usuarios/**").authenticated()
-                        // Cualquier otra ruta requiere autenticación
+                        .requestMatchers("/api/operaciones/**").authenticated()
+
+                        // Resto
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider(userDetailsService))
-                .addFilterBefore(jwtAuthenticationFilter(jwtService, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter(jwtService, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }

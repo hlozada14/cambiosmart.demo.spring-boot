@@ -12,11 +12,14 @@ public class CrearCuentaRequest {
     @NotNull
     private Moneda moneda;
 
+    @NotNull                     // ⬅️ obligatorio
+    private TipoCuenta tipoCuenta; // AHORROS | CORRIENTE
+
     @NotBlank @Size(min = 8, max = 64)
-    private String numeroCuenta; // puede venir con guiones/espacios
+    private String numeroCuenta;   // puede venir con guiones/espacios
 
     @NotBlank @Size(min = 20, max = 32)
-    private String cci; // 20 dígitos
+    private String cci;            // 20 dígitos (se normaliza a solo dígitos)
 
     private boolean principal;
 
@@ -27,6 +30,8 @@ public class CrearCuentaRequest {
     public void setBanco(Banco banco) { this.banco = banco; }
     public Moneda getMoneda() { return moneda; }
     public void setMoneda(Moneda moneda) { this.moneda = moneda; }
+    public TipoCuenta getTipoCuenta() { return tipoCuenta; }
+    public void setTipoCuenta(TipoCuenta tipoCuenta) { this.tipoCuenta = tipoCuenta; }
     public String getNumeroCuenta() { return numeroCuenta; }
     public void setNumeroCuenta(String numeroCuenta) { this.numeroCuenta = numeroCuenta; }
     public String getCci() { return cci; }
